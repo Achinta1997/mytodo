@@ -1,0 +1,38 @@
+name: release
+
+trigger: none
+
+parameters:
+  - name: environment
+    displayName: select environment to deploy
+    default: dev
+    type: string
+    values:
+      - dev
+      - qa
+      - prod
+
+stages:
+  - stage: deploy
+    jobs:
+      - deployment: deployingApp
+        environment:
+          name: ${{ parameters.environment }} 
+          resourceType: virtualMachine
+        strategy: 
+          runOnce:
+            deploy:
+              steps:
+              - task: UniversalPackages@0
+                inputs:
+                  command: 'download'
+                  downloadDirectory: '$(Build.ArtifactStagingDirectory)'
+                  feedsToUse: 'internal'
+                  vstsFeed: 'a7ddfc6d-3498-4ec3-94bf-db09610f3c2a/a7c940f9-63f9-4564-9d12-3d60c40b9a7d'
+                  vstsFeedPackage: '9d7b4416-2ebd-46fa-9ede-72bd5b382818'
+                  vstsPackageVersion: '0.0.1'
+
+              - task: Bash@3
+                inputs:
+                  targetType: 'inline'
+                  script: 'sudo cp -r $(Build.ArtifactStagingDirectory)/* /var/www/html'
